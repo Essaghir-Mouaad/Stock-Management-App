@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id             String          @id @default(uuid())
+  username       String          @unique
+  passwordHash   String
+  name           String
+  email          String?         @unique
+  role           Role            @default(WORKER)
+  userProducts   UserProduct[] // Products created/owned by this user
+  stockMovements StockMovement[]
+}
+
+model UserProduct {
+  id             String          @id @default(uuid())
+  name           String // Batch name or product group name
+  createdAt      DateTime        @default(now())
+  createdById    String
+  createdBy      User            @relation(fields: [createdById], references: [id])
+  productLines   ProductLine[] // Actual products in this batch
+  stockMovements StockMovement[]
+}
+
+model ProductLine {
+  id             String          @id @default(uuid())
+  name           String
+  quality        Int             @default(3) // 1–5 stars
+  category       String
+  unitPrice      Float           @default(0)
+  initialStock   Float           @default(0)
+  currentStock   Float           @default(0)
+  minStock       Float           @default(0)
+  unite          String          @default("Kg")
+  userProductId  String
+  userProduct    UserProduct     @relation(fields: [userProductId], references: [id])
+  stockMovements StockMovement[] 
+}
+
+model StockMovement {
+  id            String       @id @default(uuid())
+  productLineId String
+  productLine   ProductLine  @relation(fields: [productLineId], references: [id])
+  movementType  MovementType
+  quantity      Float
+  previousStock Float
+  newStock      Float
+  reason        String       @default("")
+  userId        String
+  user          User         @relation(fields: [userId], references: [id])
+  userProductId String?
+  userProduct   UserProduct? @relation(fields: [userProductId], references: [id])
+  createdAt     DateTime     @default(now())
+
+  @@index([productLineId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+enum Role {
+  ADMIN
+  WORKER
+}
+
+enum MovementType {
+  IN
+  OUT
+  ADJUSTMENT
+}
