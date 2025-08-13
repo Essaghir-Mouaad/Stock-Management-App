@@ -251,10 +251,10 @@ const AnalyticsDashboard = () => {
           <div className="mb-5">
             <div className="flex items-center mr-2">
               <div className="p-3 bg-gradient-to-b from-blue-600 to-purple-600 rounded-xl mr-3 text-white">
-                <Activity className="w-10 h-10"/>
+                <Activity className="w-10 h-10" />
               </div>
               <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-              Tableau de bord analytique
+                Tableau de bord analytique
               </h1>
             </div>
             <p className="text-gray-600 text-lg">
@@ -264,6 +264,7 @@ const AnalyticsDashboard = () => {
 
           <div className="grid grid-cols-2 gap-3 mt-3">
             <select
+              id="yearBtn"
               className="bg-white border border-gray-300 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               value={selectedYear}
               onChange={(e) => setSelectedYear(parseInt(e.target.value))}
@@ -279,6 +280,7 @@ const AnalyticsDashboard = () => {
             </select>
 
             <select
+              id="monthBtn"
               className="bg-white border border-gray-300 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
@@ -290,8 +292,10 @@ const AnalyticsDashboard = () => {
               ))}
             </select>
 
-
-            <fieldset className="fieldset bg-white border border-gray-300 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <fieldset
+              id="stockValueBtn"
+              className="fieldset bg-white border border-gray-300 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
               <label className="label text-sm font-semibold text-gray-500">
                 Ajoute Valeur stockOut
                 <input
@@ -302,7 +306,10 @@ const AnalyticsDashboard = () => {
               </label>
             </fieldset>
 
-            <fieldset className="fieldset bg-white border border-gray-300 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <fieldset
+              id="dayBtn"
+              className="fieldset bg-white border border-gray-300 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
               <label className="label text-sm font-semibold text-gray-500">
                 Rapport/jrs
                 <input
@@ -315,6 +322,7 @@ const AnalyticsDashboard = () => {
 
             {/* this input for the number of student  */}
             <input
+              id="numberOfStudentBtn"
               type="number"
               placeholder="Nombre d'élèves"
               min={0}
@@ -348,7 +356,8 @@ const AnalyticsDashboard = () => {
                 isChecked={ischecked}
               />
             ) : (
-              <PDFDownloadButton
+              <div id="printBtn">
+                <PDFDownloadButton
                 analyticsData={analyticsData}
                 selectedYear={selectedYear}
                 selectedMonth={selectedMonth}
@@ -357,6 +366,7 @@ const AnalyticsDashboard = () => {
                 isChecked={ischecked}
                 enableButton={numberStudents}
               />
+              </div>
             )}
 
             {/* <button
@@ -373,12 +383,13 @@ const AnalyticsDashboard = () => {
       {/* Navigation Tabs */}
       <div className="flex space-x-1 bg-white rounded-2xl p-1 mb-8 shadow-sm">
         {[
-          { id: "overview", label: "Vue d’ensemble", icon: Activity },
-          { id: "daily", label: "Quotidien", icon: Calendar },
-          { id: "monthly", label: "Mensuel", icon: BarChart3 },
-          { id: "categories", label: "Catégories", icon: Target },
-        ].map(({ id, label, icon: Icon }) => (
+          { id: "overview", label: "Vue d’ensemble", icon: Activity, guidId:'globalVue' },
+          { id: "daily", label: "Quotidien", icon: Calendar, guidId:'dailyVue' },
+          { id: "monthly", label: "Mensuel", icon: BarChart3, guidId:'monthlyVue' },
+          { id: "categories", label: "Catégories", icon: Target, guidId:'categoryVue' },
+        ].map(({ id, label, icon: Icon, guidId }) => (
           <button
+            id={guidId}
             key={id}
             onClick={() => setViewMode(id)}
             className={`flex items-center space-x-2 px-6 py-3 rounded-xl transition-all duration-300 ${
@@ -396,7 +407,8 @@ const AnalyticsDashboard = () => {
       {/* Stats Cards */}
       {analyticsData.currentOverview && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <StatCard
+          <div id="numberOfProducts">
+            <StatCard
             title="Produits totaux"
             value={analyticsData.currentOverview.totalProducts}
             subtitle="En stock"
@@ -404,7 +416,9 @@ const AnalyticsDashboard = () => {
             trend={12}
             color="blue"
           />
-          <StatCard
+          </div>
+          <div id="valueTotal">
+            <StatCard
             title="Valeur totale du stock"
             value={`${analyticsData.currentOverview.totalStockValue.toFixed(
               2
@@ -414,7 +428,9 @@ const AnalyticsDashboard = () => {
             trend={8}
             color="green"
           />
-          <StatCard
+          </div>
+          <div id="underStock">
+            <StatCard
             title="Articles en faible stock"
             value={analyticsData.currentOverview.lowStockProducts}
             subtitle="À surveiller"
@@ -422,7 +438,9 @@ const AnalyticsDashboard = () => {
             trend={-5}
             color="red"
           />
-          <StatCard
+          </div>
+          <div id="highStock">
+            <StatCard
             title="Articles en stock élevé"
             value={analyticsData.currentOverview.highStockProducts}
             subtitle="Bien approvisionné"
@@ -430,6 +448,7 @@ const AnalyticsDashboard = () => {
             trend={3}
             color="purple"
           />
+          </div>
         </div>
       )}
 

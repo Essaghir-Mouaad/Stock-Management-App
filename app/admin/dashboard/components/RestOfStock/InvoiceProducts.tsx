@@ -161,7 +161,7 @@ const InvoiceProducts: React.FC<CompoInfo> = ({
                 </p>
                 <p className="text-gray-600 text-sm mt-2">Date d'émission</p>
                 <p className="font-semibold text-gray-900">
-                  {new Date(selectedInvoice.createdAt).toLocaleDateString(
+                  {new Date().toLocaleDateString(
                     "fr-FR"
                   )}
                 </p>
