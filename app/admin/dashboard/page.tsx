@@ -23,8 +23,6 @@ import CurrentInvoice from "@/app/admin/dashboard/components/RestOfStock/Current
 
 import dynamic from "next/dynamic";
 import "intro.js/introjs.css";
-import introJs from "intro.js";
-import { resolve } from "path";
 
 const Steps = dynamic(() => import("intro.js-react").then((mod) => mod.Steps), {
   ssr: false,
@@ -380,7 +378,7 @@ const startGuideForStatistics = async () => {
                 onClick={startGuide}
               >
                 <ListStartIcon className="w-6 h-6 mr-2 animate-pulse" />
-                Start Guide
+                Guide
               </button>
 
               {/* Logout Button */}
@@ -478,6 +476,7 @@ const startGuideForStatistics = async () => {
                   e.stopPropagation();
                   startGuideForAcceuil();
                 }}
+                title="Commancer le guide"
               >
                 <Play className="w-5 h-5 hover:text-black" />
               </div>
@@ -502,6 +501,7 @@ const startGuideForStatistics = async () => {
                 onClick={(e) => {
                   e.stopPropagation(), startGuideForProducts();
                 }}
+                title="Commancer le guide"
               >
                 <Play className="w-5 h-5 hover:text-black" />
               </div>
@@ -526,6 +526,7 @@ const startGuideForStatistics = async () => {
                 onClick={(e) => {
                   e.stopPropagation(), startGuideForTracking();
                 }}
+                title="Commancer le guide"
               >
                 <Play className="w-5 h-5 hover:text-black" />
               </div>
@@ -551,6 +552,7 @@ const startGuideForStatistics = async () => {
                   e.stopPropagation();
                   startGuideForStatistics();
                 }}
+                title="Commancer le guide"
               >
                 <Play className="w-5 h-5 hover:text-black" />
               </div>

@@ -10,3 +10,76 @@ body {
     sans-serif;
 }
 
+/* ============================
+   Custom Intro.js Styling
+   ============================ */
+
+.introjs-tooltip {
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.95), rgba(139, 92, 246, 0.95)) !important;
+  color: #fff !important;
+  border-radius: 16px !important;
+  font-family: 'Segoe UI', Roboto, sans-serif !important;
+  font-size: 15px !important;
+  line-height: 1.6;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
+  border: none !important;
+  padding: 18px !important;
+}
+
+.introjs-tooltip-title {
+  font-size: 18px !important;
+  font-weight: bold;
+  color: #fff !important;
+  margin-bottom: 8px !important;
+}
+
+.introjs-tooltiptext {
+  font-size: 20px !important;
+  opacity: 0.95;
+}
+
+.introjs-skipbutton,
+.introjs-prevbutton,
+.introjs-nextbutton,
+.introjs-donebutton {
+  border-radius: 12px !important;
+  padding: 8px 14px !important;
+  font-size: 13px !important;
+  font-weight: 600;
+  border: none !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease;
+}
+
+.introjs-nextbutton {
+  background: linear-gradient(135deg, #34d399, #059669) !important;
+  color: white !important;
+}
+
+.introjs-prevbutton {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: #fff !important;
+}
+
+.introjs-skipbutton {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #fff !important;
+}
+
+.introjs-donebutton {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+  color: white !important;
+}
+
+.introjs-skipbutton:hover,
+.introjs-prevbutton:hover,
+.introjs-nextbutton:hover,
+.introjs-donebutton:hover {
+  transform: scale(1.05);
+}
+
+.introjs-helperLayer {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.4) !important;
+}

@@ -26,6 +26,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Product } from "@/type";
 import { useReactToPrint } from "react-to-print";
+import "intro.js/introjs.css";
 
 const WorkerStockWorkspace = () => {
   const [selectedInvoice, setSelectedInvoice] = useState(null);
@@ -38,25 +39,27 @@ const WorkerStockWorkspace = () => {
   const [invoices, setInvoices] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [productConfirmations, setProductConfirmations] = useState({});
-  const [customReasons, setCustomReasons] = useState<{ [key: string]: string }>({});
-  const [quantityAndReason, setQuantityAndReason] = useState<{ 
+  const [customReasons, setCustomReasons] = useState<{ [key: string]: string }>(
+    {}
+  );
+  const [quantityAndReason, setQuantityAndReason] = useState<{
     [key: string]: {
       product: string;
       quantity: number;
       reason: string;
       createdAt: string;
-    }
+    };
   }>({});
-  
+
   // Fix the reportTimestamp initialization
   const [reportTimestamp, setReportTimestamp] = useState<Date>(new Date());
   const [isClientMounted, setIsClientMounted] = useState(false);
-  
+
   // Keep the ref for consistent date strings
   const reportDateStringRef = useRef<string | null>(null);
 
   const printRef = useRef<HTMLDivElement>(null);
-  
+
   // Add client mount detection
   useEffect(() => {
     setIsClientMounted(true);
@@ -175,17 +178,21 @@ const WorkerStockWorkspace = () => {
       [productId]: quantity,
     }));
 
-    const productName = selectedInvoice?.products.find(p => p.id === productId)?.name || '';
+    const productName =
+      selectedInvoice?.products.find((p) => p.id === productId)?.name || "";
 
-    setQuantityAndReason(prev => ({
+    setQuantityAndReason((prev) => ({
       ...prev,
       [productId]: {
         product: productName,
         quantity: quantity,
-        reason: prev[productId]?.reason || '',
+        reason: prev[productId]?.reason || "",
         // Use consistent date string from ref or fallback
-        createdAt: prev[productId]?.createdAt || reportDateStringRef.current || new Date().toLocaleDateString("fr-FR")
-      }
+        createdAt:
+          prev[productId]?.createdAt ||
+          reportDateStringRef.current ||
+          new Date().toLocaleDateString("fr-FR"),
+      },
     }));
   };
 
@@ -195,17 +202,21 @@ const WorkerStockWorkspace = () => {
       [productId]: reason,
     }));
 
-    const productName = selectedInvoice?.products.find(p => p.id === productId)?.name || '';
+    const productName =
+      selectedInvoice?.products.find((p) => p.id === productId)?.name || "";
 
-    setQuantityAndReason(prev => ({
+    setQuantityAndReason((prev) => ({
       ...prev,
       [productId]: {
         product: productName,
         quantity: prev[productId]?.quantity || 0,
         reason: reason,
         // Use consistent date string from ref or fallback
-        createdAt: prev[productId]?.createdAt || reportDateStringRef.current || new Date().toLocaleDateString("fr-FR")
-      }
+        createdAt:
+          prev[productId]?.createdAt ||
+          reportDateStringRef.current ||
+          new Date().toLocaleDateString("fr-FR"),
+      },
     }));
 
     // Clear custom reason if not "Autre"
@@ -260,7 +271,7 @@ const WorkerStockWorkspace = () => {
       setReasons({});
       setCustomReasons({});
       setProductConfirmations({});
-      setQuantityAndReason({})
+      setQuantityAndReason({});
 
       await fetchInvoice();
     } catch (error) {
@@ -371,6 +382,60 @@ const WorkerStockWorkspace = () => {
       }));
   };
 
+  // global guide for worker section
+
+  const startGuide = async () => {
+    const introJs = (await import("intro.js")).default;
+    const intro = introJs();
+
+    intro.setOptions({
+      steps: [
+        {
+          element: "#totalInvo",
+          intro:
+            "📑 هذا الرقم يُمثل **إجمالي عدد الفواتير** الموجودة في المخزون اليوم. كل فاتورة تحتوي على مجموعة من المنتجات التي يمكنك إدارتها.",
+        },
+        {
+          element: "#activeProduct",
+          intro:
+            "📦 هنا ستجد **عدد المنتجات النشطة** الموجودة داخل الفاتورة التي اخترتها حاليًا. هذا يساعدك على معرفة حجم المخزون المتعلق بتلك الفاتورة بالتحديد.",
+        },
+        {
+          element: "#operations",
+          intro:
+            "⏳ هنا يتم عرض **عدد العمليات التي قمت بها ولكن لم تحفظها بعد**. مثلًا: إذا خصمت 2 كغ من الطماطم و3 كغ من البطاطس ولم تضغط على زر الحفظ، فستظهر هنا حتى تقوم بالحفظ.",
+        },
+        {
+          element: "#actions",
+          intro:
+            "⚠️ في هذه المنطقة ستقوم بالإجراءات النهائية: بعد اختيار الكميات وتحديد الأسباب، سيظهر لك زر تأكيد لكل منتج. بعد التأكيد يمكنك **طباعة التقرير** لعرض المنتجات التي تم إخراجها من المخزون. تذكر: بعد الطباعة يجب الضغط على زر الحفظ لإرسال البيانات إلى قاعدة البيانات، وعندها لن يكون بالإمكان طباعة نفس الفاتورة مرة أخرى لأنها أصبحت مُعالجة.",
+        },
+        {
+          element: "#choseInvo",
+          intro:
+            "📋 لكي يتمكن العامل من طباعة تقرير يحتوي على جميع العمليات (الإخراجات) التي قام بها، يجب اتباع الخطوات التالية:\n\n" +
+            "1️⃣ فتح الفاتورة التي تحتوي على المنتج المطلوب.\n" +
+            "2️⃣ إدخال الكمية التي تم استهلاكها.\n" +
+            "3️⃣ اختيار سبب الاستهلاك من القائمة.\n" +
+            "4️⃣ الضغط على زر **تأكيد** للتأكد من صحة البيانات.\n" +
+            "5️⃣ بعد ذلك يمكنه طباعة التقرير.\n\n" +
+            "⚠️ ملاحظة مهمة: إذا قام العامل بحفظ البيانات قبل الطباعة، فإن التقرير سيكون فارغًا. لذلك يجب طباعة التقرير أولاً ثم حفظ البيانات.",
+        },
+      ],
+      showProgress: true,
+      showButtons: true,
+      nextLabel: "التالي",
+      prevLabel: "السابق",
+      skipLabel: "تخطي",
+      doneLabel: "إنهاء",
+    });
+
+    intro.start();
+    setTimeout(() => {
+      intro.start();
+    }, 400);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Header */}
@@ -392,12 +457,24 @@ const WorkerStockWorkspace = () => {
               </div>
             </div>
             <div className="flex items-center space-x-4">
+              <button
+                className="py-3 px-5 bg-gradient-to-l text-xl text-white font-bold cursor-pointer hover:animate-bounce from-blue-300 to-purple-500 rounded-xl"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  startGuide();
+                }}
+              >
+                Guide
+              </button>
               <div className="flex items-center space-x-2 bg-white/60 backdrop-blur-sm rounded-2xl px-4 py-2 border border-white/20 shadow-sm">
                 <div className="h-8 w-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center animate-bounce">
-                  <User className="h-4 w-4 text-white"/>
+                  <User className="h-4 w-4 text-white" />
                 </div>
                 <span className="text-slate-700 font-semibold">
-                  Hello <span className="text-xl bg-gradient-to-l from-lime-900 via-lime-700 to-lime-900 bg-clip-text text-transparent font-extrabold">{workerName.toUpperCase()}</span>
+                  Hello{" "}
+                  <span className="text-xl bg-gradient-to-l from-lime-900 via-lime-700 to-lime-900 bg-clip-text text-transparent font-extrabold">
+                    {workerName.toUpperCase()}
+                  </span>
                 </span>
               </div>
               <button
@@ -419,7 +496,10 @@ const WorkerStockWorkspace = () => {
           <div className="bg-gradient-to-b from-slate-50 to-white p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {/* Total Invoices */}
-              <div className="bg-white border border-slate-200 rounded-xl p-4 hover:shadow-lg transition-shadow duration-300">
+              <div
+                id="totalInvo"
+                className="bg-white border border-slate-200 rounded-xl p-4 hover:shadow-lg transition-shadow duration-300"
+              >
                 <div className="flex items-center justify-between mb-3">
                   <div className="p-2 bg-blue-100 rounded-lg">
                     <FileText className="w-6 h-6 text-blue-600" />
@@ -439,7 +519,10 @@ const WorkerStockWorkspace = () => {
               </div>
 
               {/* Active Products */}
-              <div className="bg-white border border-slate-200 rounded-xl p-4 hover:shadow-lg transition-shadow duration-300">
+              <div
+                id="activeProduct"
+                className="bg-white border border-slate-200 rounded-xl p-4 hover:shadow-lg transition-shadow duration-300"
+              >
                 <div className="flex items-center justify-between mb-3">
                   <div className="p-2 bg-emerald-100 rounded-lg">
                     <Package className="w-6 h-6 text-emerald-600" />
@@ -459,7 +542,10 @@ const WorkerStockWorkspace = () => {
               </div>
 
               {/* Pending Operations */}
-              <div className="bg-white border border-slate-200 rounded-xl p-4 hover:shadow-lg transition-shadow duration-300">
+              <div
+                id="operations"
+                className="bg-white border border-slate-200 rounded-xl p-4 hover:shadow-lg transition-shadow duration-300"
+              >
                 <div className="flex items-center justify-between mb-3">
                   <div className="p-2 bg-amber-100 rounded-lg">
                     <Clock className="w-6 h-6 text-amber-600" />
@@ -502,7 +588,10 @@ const WorkerStockWorkspace = () => {
             {/* Quick Actions & Information */}
             <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Quick Actions */}
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-5">
+              <div
+                id="actions"
+                className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-5"
+              >
                 <div className="flex items-center mb-4">
                   <div className="p-2 bg-blue-500 rounded-lg mr-3">
                     <Settings className="w-5 h-5 text-white" />
@@ -519,7 +608,10 @@ const WorkerStockWorkspace = () => {
                     <CheckCircle className="w-4 h-4 mr-2" />
                     Enregistrer Tous les Changements
                   </button>
-                  <button className="w-full flex items-center justify-center px-4 py-2 bg-slate-500 text-white rounded-lg hover:bg-slate-600 transition-colors duration-200" onClick={handlePrint}>
+                  <button
+                    className="w-full flex items-center justify-center px-4 py-2 bg-slate-500 text-white rounded-lg hover:bg-slate-600 transition-colors duration-200"
+                    onClick={handlePrint}
+                  >
                     <Download className="w-4 h-4 mr-2" />
                     Télécharger Rapport
                   </button>
@@ -545,17 +637,27 @@ const WorkerStockWorkspace = () => {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-slate-600">Date:</span>
-                    <span className="text-sm font-semibold text-slate-800" suppressHydrationWarning>
-                      {isClientMounted ? reportTimestamp.toLocaleDateString("fr-FR") : "--/--/----"}
+                    <span
+                      className="text-sm font-semibold text-slate-800"
+                      suppressHydrationWarning
+                    >
+                      {isClientMounted
+                        ? reportTimestamp.toLocaleDateString("fr-FR")
+                        : "--/--/----"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-slate-600">Heure:</span>
-                    <span className="text-sm font-semibold text-slate-800" suppressHydrationWarning>
-                      {isClientMounted ? reportTimestamp.toLocaleTimeString("fr-FR", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      }) : "--:--"}
+                    <span
+                      className="text-sm font-semibold text-slate-800"
+                      suppressHydrationWarning
+                    >
+                      {isClientMounted
+                        ? reportTimestamp.toLocaleTimeString("fr-FR", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : "--:--"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -574,7 +676,7 @@ const WorkerStockWorkspace = () => {
         </div>
       </div>
 
-      <div className="max-w-full mx-auto px-6 py-8">
+      <div id="choseInvo" className="max-w-full mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Panel - Invoice List */}
           <div className="lg:col-span-1 h-full">
@@ -1072,17 +1174,34 @@ const WorkerStockWorkspace = () => {
         </div>
       </div>
 
-      <div ref={printRef} className="hidden print:block print:p-8 print:bg-white">
+      <div
+        ref={printRef}
+        className="hidden print:block print:p-8 print:bg-white"
+      >
         {/* Header */}
         <div className="text-center mb-8 border-b-2 border-gray-800 pb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
             RAPPORT D'UTILISATION DES PRODUITS
           </h1>
           <div className="text-gray-700 space-y-1">
-            <p className="text-lg">Facture: <span className="font-semibold">{selectedInvoice?.name}</span></p>
-            <p suppressHydrationWarning>Date: <span className="font-medium">{isClientMounted ? reportTimestamp.toLocaleDateString('fr-FR') : '--/--/----'}</span></p>
-            <p>Employé: <span className="font-medium">{workerName}</span></p>
-            <p className="text-sm text-gray-500">ID Facture: {selectedInvoice?.id}</p>
+            <p className="text-lg">
+              Facture:{" "}
+              <span className="font-semibold">{selectedInvoice?.name}</span>
+            </p>
+            <p suppressHydrationWarning>
+              Date:{" "}
+              <span className="font-medium">
+                {isClientMounted
+                  ? reportTimestamp.toLocaleDateString("fr-FR")
+                  : "--/--/----"}
+              </span>
+            </p>
+            <p>
+              Employé: <span className="font-medium">{workerName}</span>
+            </p>
+            <p className="text-sm text-gray-500">
+              ID Facture: {selectedInvoice?.id}
+            </p>
           </div>
         </div>
 
@@ -1092,23 +1211,48 @@ const WorkerStockWorkspace = () => {
             <table className="w-full border-collapse border-2 border-gray-800">
               <thead>
                 <tr className="bg-gray-200">
-                  <th className="border border-gray-600 p-3 text-left font-bold">#</th>
-                  <th className="border border-gray-600 p-3 text-left font-bold">Produit</th>
-                  <th className="border border-gray-600 p-3 text-center font-bold">Quantité</th>
-                  <th className="border border-gray-600 p-3 text-left font-bold">Raison d'utilisation</th>
-                  <th className="border border-gray-600 p-3 text-center font-bold">Date</th>
+                  <th className="border border-gray-600 p-3 text-left font-bold">
+                    #
+                  </th>
+                  <th className="border border-gray-600 p-3 text-left font-bold">
+                    Produit
+                  </th>
+                  <th className="border border-gray-600 p-3 text-center font-bold">
+                    Quantité
+                  </th>
+                  <th className="border border-gray-600 p-3 text-left font-bold">
+                    Raison d'utilisation
+                  </th>
+                  <th className="border border-gray-600 p-3 text-center font-bold">
+                    Date
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {getPrintableData().map((item, index) => (
-                  <tr key={index} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
-                    <td className="border border-gray-400 p-3 text-center font-medium">{index + 1}</td>
-                    <td className="border border-gray-400 p-3 font-medium">{item.product}</td>
-                    <td className="border border-gray-400 p-3 text-center">
-                      <span className="font-semibold">{item.quantity}</span> {item.unit}
+                  <tr
+                    key={index}
+                    className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
+                  >
+                    <td className="border border-gray-400 p-3 text-center font-medium">
+                      {index + 1}
                     </td>
-                    <td className="border border-gray-400 p-3">{item.reason}</td>
-                    <td className="border border-gray-400 p-3 text-center" suppressHydrationWarning>{item.createdAt}</td>
+                    <td className="border border-gray-400 p-3 font-medium">
+                      {item.product}
+                    </td>
+                    <td className="border border-gray-400 p-3 text-center">
+                      <span className="font-semibold">{item.quantity}</span>{" "}
+                      {item.unit}
+                    </td>
+                    <td className="border border-gray-400 p-3">
+                      {item.reason}
+                    </td>
+                    <td
+                      className="border border-gray-400 p-3 text-center"
+                      suppressHydrationWarning
+                    >
+                      {item.createdAt}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -1117,7 +1261,10 @@ const WorkerStockWorkspace = () => {
         ) : (
           <div className="text-center text-gray-600 py-12 border border-gray-300 rounded">
             <p className="text-lg">Aucun produit utilisé à imprimer</p>
-            <p className="text-sm mt-2">Veuillez sélectionner des produits et spécifier les quantités utilisées.</p>
+            <p className="text-sm mt-2">
+              Veuillez sélectionner des produits et spécifier les quantités
+              utilisées.
+            </p>
           </div>
         )}
 
@@ -1126,12 +1273,28 @@ const WorkerStockWorkspace = () => {
           <h3 className="font-bold text-lg mb-2">Résumé:</h3>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <p><span className="font-medium">Total produits utilisés:</span> {getPrintableData().length}</p>
-              <p><span className="font-medium">Facture traitée:</span> {selectedInvoice?.name || 'N/A'}</p>
+              <p>
+                <span className="font-medium">Total produits utilisés:</span>{" "}
+                {getPrintableData().length}
+              </p>
+              <p>
+                <span className="font-medium">Facture traitée:</span>{" "}
+                {selectedInvoice?.name || "N/A"}
+              </p>
             </div>
             <div suppressHydrationWarning>
-              <p><span className="font-medium">Date du rapport:</span> {isClientMounted ? reportTimestamp.toLocaleDateString('fr-FR') : '--/--/----'}</p>
-              <p><span className="font-medium">Heure:</span> {isClientMounted ? reportTimestamp.toLocaleTimeString('fr-FR') : '--:--'}</p>
+              <p>
+                <span className="font-medium">Date du rapport:</span>{" "}
+                {isClientMounted
+                  ? reportTimestamp.toLocaleDateString("fr-FR")
+                  : "--/--/----"}
+              </p>
+              <p>
+                <span className="font-medium">Heure:</span>{" "}
+                {isClientMounted
+                  ? reportTimestamp.toLocaleTimeString("fr-FR")
+                  : "--:--"}
+              </p>
             </div>
           </div>
         </div>
@@ -1145,7 +1308,12 @@ const WorkerStockWorkspace = () => {
             </div>
             <div className="text-right" suppressHydrationWarning>
               <p>Généré automatiquement</p>
-              <p>Le: {isClientMounted ? reportTimestamp.toLocaleString('fr-FR') : 'Loading...'}</p>
+              <p>
+                Le:{" "}
+                {isClientMounted
+                  ? reportTimestamp.toLocaleString("fr-FR")
+                  : "Loading..."}
+              </p>
             </div>
           </div>
         </div>

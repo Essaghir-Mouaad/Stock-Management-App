@@ -33,11 +33,12 @@ import {
   ArrowUpRight,
   ArrowDownRight,
 } from "lucide-react";
-import toast from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 import PDFDownloadButton from "./PrintButton";
 import SelectedDayMvt from "./SelectedDayMvt";
 // Fixed: Remove duplicate import, keep only one
 import PDFDownloadDailyReportButton from "./DailyButton";
+import BackupManager from "@/app/components/BackupManager";
 
 const AnalyticsDashboard = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -245,6 +246,14 @@ const AnalyticsDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
+      <Toaster position="top-right" />
+        
+        {/* Add the backup manager */}
+        <BackupManager 
+          analyticsData={analyticsData}
+          selectedYear={selectedYear}
+          selectedMonth={selectedMonth}
+        />
       {/* Header */}
       <div className="mb-8">
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between">
