@@ -176,31 +176,31 @@ const page = () => {
     intro.start();
   };
 
-  const startGuideForTracking = async () => {
-    if (activeTab !== "track") {
-      setActiveTab("track");
-      await new Promise((resolve) => setTimeout(resolve, 300));
-    }
+  // const startGuideForTracking = async () => {
+  //   if (activeTab !== "track") {
+  //     setActiveTab("track");
+  //     await new Promise((resolve) => setTimeout(resolve, 300));
+  //   }
 
-    const introJs = (await import("intro.js")).default;
-    const intro = introJs();
+  //   const introJs = (await import("intro.js")).default;
+  //   const intro = introJs();
 
-    intro.setOptions({
-      steps: [
-        {
-          element: "#trackInfo",
-          intro:
-            "📦 في هذا القسم يمكنك متابعة كل فاتورة على حدة ومعرفة جميع التفاصيل المرتبطة بها. " +
-            "ستجد المخزون الحالي لكل منتج، وسعر الوحدة، بالإضافة إلى تقييم الأداء وجودة المنتج بناءً على بيانات الاستهلاك. " +
-            "كما يمكنك الاطلاع على المخزون الابتدائي الذي تم إدخاله عند إنشاء الفاتورة، " +
-            "ومراجعة المتوسط العام لجميع البيانات الخاصة بتلك الفاتورة، مما يمنحك رؤية دقيقة وشاملة. " +
-            "هذه المعلومات تساعدك على تتبّع حركة المنتجات بدقة واتخاذ قرارات سريعة إذا لاحظت تغيّرات في السعر أو الكمية أو التقييم.",
-        },
-      ],
-    });
+  //   intro.setOptions({
+  //     steps: [
+  //       {
+  //         element: "#trackInfo",
+  //         intro:
+  //           "📦 في هذا القسم يمكنك متابعة كل فاتورة على حدة ومعرفة جميع التفاصيل المرتبطة بها. " +
+  //           "ستجد المخزون الحالي لكل منتج، وسعر الوحدة، بالإضافة إلى تقييم الأداء وجودة المنتج بناءً على بيانات الاستهلاك. " +
+  //           "كما يمكنك الاطلاع على المخزون الابتدائي الذي تم إدخاله عند إنشاء الفاتورة، " +
+  //           "ومراجعة المتوسط العام لجميع البيانات الخاصة بتلك الفاتورة، مما يمنحك رؤية دقيقة وشاملة. " +
+  //           "هذه المعلومات تساعدك على تتبّع حركة المنتجات بدقة واتخاذ قرارات سريعة إذا لاحظت تغيّرات في السعر أو الكمية أو التقييم.",
+  //       },
+  //     ],
+  //   });
 
-    intro.start();
-  };
+  //   intro.start();
+  // };
 
 const startGuideForStatistics = async () => {
   if (activeTab !== "analysis") {
@@ -213,6 +213,10 @@ const startGuideForStatistics = async () => {
 
   intro.setOptions({
     steps: [
+      {
+        element: "#backup",
+        intro: "this section i very important for backup handling when ever you came to check your stock the only thing you can do is to press one of the buttons in order to send the data back to your USB drive just for protection of course and mode data security so to do that all what you have to is to select the your drive click the test drive button than you can wait intel the end of the day and push the data into your USB drive or you can activate auto pucjing every hour for more info cnsulte the PDF version ..."
+      },
       {
         element: "#yearBtn",
         intro: "اختر السنة التي تريد عرض التحليلات الخاصة بها لمتابعة الأداء السنوي للمخزون."
@@ -522,14 +526,17 @@ const startGuideForStatistics = async () => {
                   Suivi quotidien
                 </span>
               </div>
-              <div
+
+              {/* //this div for activatin the guide for the tracking section  */}
+
+              {/* <div
                 onClick={(e) => {
                   e.stopPropagation(), startGuideForTracking();
                 }}
                 title="Commancer le guide"
               >
                 <Play className="w-5 h-5 hover:text-black" />
-              </div>
+              </div> */}
             </button>
 
             <button
