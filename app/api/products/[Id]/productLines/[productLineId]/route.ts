@@ -1,3 +1,4 @@
+export const runtime = "nodejs";
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/app/utils/authClient";
 import { deleteProductLine, updateProductLine } from "@/app/actions/productActions";

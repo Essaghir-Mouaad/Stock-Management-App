@@ -25,7 +25,6 @@ import Invoices from "./Registration/Invoices";
 import InvoiceProducts from "./Registration/InvoiceProducts";
 import DetailInfo from "./Registration/DetailInfo";
 import StockPricing from "./Pricing/StockPricing";
-import { geteuid } from "process";
 
 const GlobalDashboard = () => {
   const [notification, setNotification] = useState<any>(null);
