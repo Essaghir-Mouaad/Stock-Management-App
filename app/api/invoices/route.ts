@@ -1,3 +1,4 @@
+export const runtime = "nodejs";
 import { NextResponse } from "next/server";
 import { getInvoiceProductByEmail, initialiseProductInvoice } from "@/app/actions/productActions";
 import { getCurrentUser } from "@/app/utils/authClient";
