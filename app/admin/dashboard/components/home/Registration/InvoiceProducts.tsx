@@ -86,7 +86,7 @@ const InvoiceProducts: React.FC<CompoInfo> = ({
           `/api/analytics/product-performance?startDate=${startDateStr}&endDate=${endDateStr}&limit=10`
         ).then((res) => res.json()),
         fetch(
-          `/api/analytics/current-overview?startDate=${startDate}&endDate=${endDate}`
+          `/api/analytics/current-overview?startDate=${encodeURIComponent(startDateStr)}&endDate=${encodeURIComponent(endDateStr)}`
         ).then((res) => res.json()),
       ]);
 

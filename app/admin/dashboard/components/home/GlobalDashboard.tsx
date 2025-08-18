@@ -61,7 +61,7 @@ const fetchAnalysisData = async () => {
   try {
     const [currentOverview, productPerformance, getCategoryStats] =
       await Promise.all([
-        fetch(`/api/analytics/current-overview?startDate=${startDateStr}&endDate=${endDateStr}`).then((res) => res.json()),
+        fetch(`/api/analytics/current-overview?startDate=${encodeURIComponent(startDateStr)}&endDate=${encodeURIComponent(endDateStr)}`).then((res) => res.json()),
         fetch(
           `/api/analytics/product-performance?startDate=${startDateStr}&endDate=${endDateStr}&limit=10`
         ).then((res) => res.json()),

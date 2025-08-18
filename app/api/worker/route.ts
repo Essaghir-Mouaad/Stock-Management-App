@@ -57,5 +57,8 @@ export async function GET(request: NextRequest) {
     }));
 
     return NextResponse.json(invoices)
-  } catch (error) {}
+  } catch (error) {
+    console.error("/api/worker GET error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

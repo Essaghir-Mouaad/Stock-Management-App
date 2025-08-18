@@ -166,7 +166,7 @@ const WorkerStockWorkspace = () => {
       invoice.id.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter =
       filterCategory === "all" ||
-      invoice.productLines.some(
+      (invoice.products || invoice.productLines || []).some(
         (product) => product.category === filterCategory
       );
     return matchesSearch && matchesFilter;
@@ -179,7 +179,7 @@ const WorkerStockWorkspace = () => {
     }));
 
     const productName =
-      selectedInvoice?.products.find((p) => p.id === productId)?.name || "";
+      (selectedInvoice?.products || selectedInvoice?.productLines || []).find((p: any) => p.id === productId)?.name || "";
 
     setQuantityAndReason((prev) => ({
       ...prev,
@@ -203,7 +203,7 @@ const WorkerStockWorkspace = () => {
     }));
 
     const productName =
-      selectedInvoice?.products.find((p) => p.id === productId)?.name || "";
+      (selectedInvoice?.products || selectedInvoice?.productLines || []).find((p: any) => p.id === productId)?.name || "";
 
     setQuantityAndReason((prev) => ({
       ...prev,
@@ -377,7 +377,7 @@ const WorkerStockWorkspace = () => {
         ...data,
         reason: getFinalReasonForPrint(productId),
         unit:
-          selectedInvoice?.products.find((p) => p.id === productId)?.unit ||
+          (selectedInvoice?.products || selectedInvoice?.productLines || []).find((p: any) => p.id === productId)?.unit ||
           "unités",
       }));
   };

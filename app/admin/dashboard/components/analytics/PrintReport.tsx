@@ -242,9 +242,9 @@ const PDFReportLayout = React.forwardRef(
     const weeklyData = calculateWeeklyTotals(data.dailyMovements);
 
     // Handle monthly summary - check if it's an object or array
-    const monthlySummaryData = Array.isArray(data.monthlySummary)
-      ? data.monthlySummary
-      : [data.monthlySummary]; // Convert object to array for consistent rendering
+    const monthlySummaryData = data.monthlySummary
+      ? (Array.isArray(data.monthlySummary) ? data.monthlySummary : [data.monthlySummary])
+      : [];
 
     return (
       <div
@@ -340,9 +340,11 @@ const PDFReportLayout = React.forwardRef(
                 <tr key={index} className="border-b">
                   <td className="px-4 py-3">
                     <div className="text-sm font-medium">
-                      {monthNames[monthData.month - 1]} {monthData.year}
+                      {typeof monthData?.month === 'number' && monthData?.year
+                        ? `${monthNames[monthData.month - 1]} ${monthData.year}`
+                        : `${monthName} ${selectedYear}`}
                     </div>
-                    {!Array.isArray(data.monthlySummary) && (
+                    {data.monthlySummary && !Array.isArray(data.monthlySummary) && (
                       <div className="text-xs text-gray-500">
                         Données actuelles
                       </div>
