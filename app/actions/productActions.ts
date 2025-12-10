@@ -59,22 +59,64 @@ export async function getInvoiceProductByEmail(email: string) {
 
 export async function getProductsById(invoiceId: string) {
   try {
-    const produt = await prisma.userProduct.findUnique({
+    // OPTIMIZED: Include stockMovements in single query to avoid N+1 pattern
+    const product = await prisma.userProduct.findUnique({
       where: { id: invoiceId },
       include: {
-        productLines: true,
+        productLines: {
+          include: {
+            // Fetch all stock movements for each product line in one query
+            stockMovements: {
+              select: {
+                id: true,
+                movementType: true,
+                quantity: true,
+                previousStock: true,
+                newStock: true,
+                createdAt: true,
+              },
+            },
+          },
+        },
       },
-    })
+    });
 
-    if (!produt) {
+    if (!product) {
       throw new Error("Product not found");
     }
 
-    return produt;
+    // Calculate aggregate stats in memory (no additional queries)
+    const productLinesWithStats = product.productLines.map((line) => ({
+      ...line,
+      stats: {
+        totalMovements: line.stockMovements.length,
+        totalQuantityIn: line.stockMovements
+          .filter((m) => m.movementType === 'IN')
+          .reduce((sum, m) => sum + m.quantity, 0),
+        totalQuantityOut: line.stockMovements
+          .filter((m) => m.movementType === 'OUT')
+          .reduce((sum, m) => sum + m.quantity, 0),
+        totalQuantityAdjustment: line.stockMovements
+          .filter((m) => m.movementType === 'ADJUSTMENT')
+          .reduce((sum, m) => sum + m.quantity, 0),
+        currentStock:
+          line.stockMovements.length > 0
+            ? line.stockMovements[line.stockMovements.length - 1].newStock
+            : line.currentStock,
+        lastMovement:
+          line.stockMovements.length > 0
+            ? line.stockMovements[line.stockMovements.length - 1].createdAt
+            : null,
+      },
+    }));
+
+    return {
+      ...product,
+      productLines: productLinesWithStats,
+    };
   } catch (error) {
     console.error("Error fetching product by ID:", error);
     throw error;
-
   }
 }
 

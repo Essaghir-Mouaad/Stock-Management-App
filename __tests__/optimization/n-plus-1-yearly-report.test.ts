@@ -81,7 +81,7 @@ describe('N+1 Query: getYearlyReport', () => {
 
           await prisma.stockMovement.create({
             data: {
-              id: `test-movement-${month}-${day}`,
+              id: `test-movement-${testYear}-${month}-${day}-${Math.random()}`, // Unique ID
               movementType: day % 2 === 0 ? 'IN' : 'OUT',
               quantity,
               previousStock,
