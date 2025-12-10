@@ -5,7 +5,6 @@ import SelectedDayMvt from "./SelectedDayMvt";
 
 const PDFDownloadDailyReportButton = ({ analyticsData, selectedYear, selectedMonth, selectedDay, toast, isChecked }: any) => {
     const printRef = useRef(null);
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
     const reactToPrintFn = useReactToPrint({
         contentRef: printRef,

@@ -63,6 +63,7 @@ export async function getDailyMovements(startDate: Date, endDate: Date, userId?:
 }
 
 // Get monthly summary for analytics
+// Get monthly summary for analytics with cumulative balance
 export async function getMonthlySummary(year: number, month: number, userId?: string) {
     try {
         const startDate = new Date(year, month - 1, 1);
@@ -79,6 +80,7 @@ export async function getMonthlySummary(year: number, month: number, userId?: st
             whereClause.userId = userId;
         }
 
+        // Get current month movements
         const movements = await prisma.stockMovement.findMany({
             where: whereClause,
             include: {
@@ -91,28 +93,55 @@ export async function getMonthlySummary(year: number, month: number, userId?: st
             },
         });
 
-        // Calculate monthly totals
-        const monthlyData = movements.reduce((acc, movement) => {
+        // Get previous month's net balance (cumulative balance up to previous month)
+        const previousMonthEndDate = new Date(year, month - 1, 0, 23, 59, 59);
+        const previousMovements = await prisma.stockMovement.findMany({
+            where: {
+                ...whereClause,
+                createdAt: {
+                    lte: previousMonthEndDate,
+                },
+            },
+        });
+
+        // Calculate previous cumulative balance
+        const previousCumulativeBalance = previousMovements.reduce((acc, movement) => {
+            if (movement.movementType === 'IN') {
+                acc += movement.quantity;
+            } else if (movement.movementType === 'OUT') {
+                acc -= movement.quantity;
+            }
+            return acc;
+        }, 0);
+
+        // Calculate current month's movements
+        const currentMonthData = movements.reduce((acc, movement) => {
             if (movement.movementType === 'IN') {
                 acc.totalIn += movement.quantity;
-                acc.net += movement.quantity;
+                acc.monthlyNet += movement.quantity;
             } else if (movement.movementType === 'OUT') {
                 acc.totalOut += movement.quantity;
-                acc.net -= movement.quantity;
+                acc.monthlyNet -= movement.quantity;
             }
             return acc;
         }, {
             totalIn: 0,
             totalOut: 0,
-            net: 0,
+            monthlyNet: 0, // Net change for this month only
             movementCount: movements.length,
         });
 
         return {
             year,
             month,
-            ...monthlyData,
-            averageDaily: monthlyData.movementCount / new Date(year, month, 0).getDate(),
+            totalIn: currentMonthData.totalIn,
+            totalOut: currentMonthData.totalOut,
+            monthlyNet: currentMonthData.monthlyNet, // Net change for this month
+            previousBalance: previousCumulativeBalance, // Balance from previous months
+            cumulativeNet: previousCumulativeBalance + currentMonthData.monthlyNet, // Total cumulative balance
+            net: previousCumulativeBalance + currentMonthData.monthlyNet, // Use cumulative net as the main net value
+            movementCount: currentMonthData.movementCount,
+            averageDaily: currentMonthData.movementCount / new Date(year, month, 0).getDate(),
         };
     } catch (error) {
         console.error("Error fetching monthly summary:", error);
@@ -121,31 +150,106 @@ export async function getMonthlySummary(year: number, month: number, userId?: st
 }
 
 // Get yearly report with all months
+// OPTIMIZED: Uses single batched query instead of 12 individual queries (N+1 fix)
 export async function getYearlyReport(year: number, userId?: string) {
     try {
-        const monthlyData = [];
+        const yearStart = new Date(year, 0, 1);
+        const yearEnd = new Date(year, 11, 31, 23, 59, 59);
 
-        for (let month = 1; month <= 12; month++) {
-            const monthData = await getMonthlySummary(year, month, userId);
-            monthlyData.push({
-                month,
-                monthName: new Date(year, month - 1, 1).toLocaleString('default', { month: 'short' }),
-                ...monthData,
-            });
-        }
-
-        const yearlyTotals = monthlyData.reduce((acc, month) => {
-            acc.totalIn += month.totalIn;
-            acc.totalOut += month.totalOut;
-            acc.net += month.net;
-            acc.totalMovements += month.movementCount;
-            return acc;
-        }, {
-            totalIn: 0,
-            totalOut: 0,
-            net: 0,
-            totalMovements: 0,
+        // SINGLE BATCHED QUERY: Get all movements for the year at once
+        const movements = await prisma.stockMovement.findMany({
+            where: {
+                createdAt: {
+                    gte: yearStart,
+                    lte: yearEnd,
+                },
+                ...(userId && { userId }),
+            },
+            select: {
+                movementType: true,
+                quantity: true,
+                createdAt: true,
+            },
         });
+
+        // Process all 12 months in memory (no additional queries)
+        const monthlyData = Array.from({ length: 12 }, (_, monthIndex) => {
+            const month = monthIndex + 1;
+            const monthStart = new Date(year, monthIndex, 1);
+            const monthEnd = new Date(year, monthIndex + 1, 0, 23, 59, 59);
+
+            // Filter movements for this month
+            const monthMovements = movements.filter(
+                (m) => m.createdAt >= monthStart && m.createdAt <= monthEnd
+            );
+
+            // Calculate previous cumulative balance (all movements before this month)
+            const previousCumulativeBalance = movements
+                .filter((m) => m.createdAt < monthStart)
+                .reduce((acc, movement) => {
+                    if (movement.movementType === 'IN') {
+                        acc += movement.quantity;
+                    } else if (movement.movementType === 'OUT') {
+                        acc -= movement.quantity;
+                    }
+                    return acc;
+                }, 0);
+
+            // Calculate current month data
+            const currentMonthData = monthMovements.reduce(
+                (acc, movement) => {
+                    if (movement.movementType === 'IN') {
+                        acc.totalIn += movement.quantity;
+                        acc.monthlyNet += movement.quantity;
+                    } else if (movement.movementType === 'OUT') {
+                        acc.totalOut += movement.quantity;
+                        acc.monthlyNet -= movement.quantity;
+                    }
+                    return acc;
+                },
+                {
+                    totalIn: 0,
+                    totalOut: 0,
+                    monthlyNet: 0,
+                    movementCount: monthMovements.length,
+                }
+            );
+
+            return {
+                month,
+                monthName: new Date(year, monthIndex, 1).toLocaleString('default', {
+                    month: 'short',
+                }),
+                year,
+                totalIn: currentMonthData.totalIn,
+                totalOut: currentMonthData.totalOut,
+                monthlyNet: currentMonthData.monthlyNet,
+                previousBalance: previousCumulativeBalance,
+                cumulativeNet: previousCumulativeBalance + currentMonthData.monthlyNet,
+                net: previousCumulativeBalance + currentMonthData.monthlyNet,
+                movementCount: currentMonthData.movementCount,
+                averageDaily:
+                    currentMonthData.movementCount /
+                    new Date(year, monthIndex + 1, 0).getDate(),
+            };
+        });
+
+        // Calculate yearly totals
+        const yearlyTotals = monthlyData.reduce(
+            (acc, month) => {
+                acc.totalIn += month.totalIn;
+                acc.totalOut += month.totalOut;
+                acc.net += month.net;
+                acc.totalMovements += month.movementCount;
+                return acc;
+            },
+            {
+                totalIn: 0,
+                totalOut: 0,
+                net: 0,
+                totalMovements: 0,
+            }
+        );
 
         return {
             year,

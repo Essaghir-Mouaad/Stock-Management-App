@@ -1,4 +1,4 @@
-import { Product } from "@/type";
+import { Product } from "@/types/type";
 import { FileText, Package } from "lucide-react";
 import React from "react";
 

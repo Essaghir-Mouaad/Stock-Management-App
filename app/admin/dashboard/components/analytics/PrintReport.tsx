@@ -1,20 +1,18 @@
-import React, { useRef } from "react";
-import { useReactToPrint } from "react-to-print";
-import {
-  BarChart3,
-  Calendar,
-  DollarSign,
-  Download,
-  Package,
-  TrendingDown,
-  TrendingUp,
-  AlertTriangle,
-} from "lucide-react";
+import React from "react";
+import { Calendar } from "lucide-react";
+import { Movement } from "@/types/interfaces";
 
 // PDF Report Layout Component
-const PDFReportLayout = React.forwardRef(
+const GlobalReport = React.forwardRef(
   (
-    { analyticsData, selectedYear, selectedMonth, numberStudents, isChecked }: any,
+    {
+      analyticsData,
+      selectedYear,
+      selectedMonth,
+      numberStudents,
+      checkedOption,
+      categotyToignore
+    }: any,
     ref: any
   ) => {
     const currentDate = new Date().toLocaleDateString("fr-FR", {
@@ -39,53 +37,124 @@ const PDFReportLayout = React.forwardRef(
       "Décembre",
     ];
 
+interface WeeklyStats {
+  totalIn: number;
+  totalOut: number;
+  net: number;
+  movementCount: number;
+  year: number;
+  week: number; 
+  weekNumber: number; 
+  startDate: string;
+  endDate: string;
+  days: Array<{
+    date: string;
+    stockIn: number;
+    stockOut: number;
+    net: number;
+    movements: Movement[];
+    movementCount: number;
+  }>;
+  // Keep as Records initially, will convert to arrays later
+  categoryStats: Record<string, {
+    name: string;
+    totalIn: number;
+    totalOut: number;
+    net: number;
+    movementCount: number;
+  }>;
+  productStats: Record<string, {
+    id: string;
+    name: string;
+    category: string;
+    totalIn: number;
+    totalOut: number;
+    net: number;
+    unite: string;
+    movementCount: number;
+    unitPrice: number;
+  }>;
+}
+
+interface WeeklyGroups {
+  [weekKey: string]: WeeklyStats;
+}
+
+interface WeeklyDataItem {
+  week: string;
+  weekNumber: number;
+  totalIn: number;
+  totalOut: number;
+  net: number;
+  movementCount: number;
+  year: number;
+  startDate: string;
+  endDate: string;
+  days: Array<{
+    date: string;
+    stockIn: number;
+    stockOut: number;
+    net: number;
+    movements: Movement[];
+    movementCount: number;
+  }>;
+  // These should be arrays after conversion
+  categoryStats: Array<{
+    name: string;
+    totalIn: number;
+    totalOut: number;
+    net: number;
+    movementCount: number;
+  }>;
+  productStats: Array<{
+    id: string;
+    name: string;
+    category: string;
+    totalIn: number;
+    totalOut: number;
+    net: number;
+    unite: string;
+    movementCount: number;
+    unitPrice: number;
+  }>;
+}
+
     const monthName = monthNames[selectedMonth - 1];
     const data = analyticsData.data || analyticsData;
 
     // Calculate total stock value
     const totalOutValue =
-      data.productPerformance?.reduce((sum: number, product: any) => {
+      data?.productPerformance?.reduce((sum: number, product: any) => {
         return sum + product.totalOut * product.unitPrice;
       }, 0) || 0;
 
-    data.currentOverview?.totalStockValue || 0;
-
-    // this are the categories we based on to calculate the daily consumation / student
-
-    const categoryCoutForConsomation = [
-      "Boissons",
-      "Céréales",
-      "Fruits",
-      "Viande",
-      "Légumes",
-    ];
 
     // this const handel the quantity of the categories out of consumation of students
-    const totalCategoryoutOfStudentConso = data.productPerformance
-      ?.filter(
-        (product: any) =>
-          product.category === "Produits de nettoyage (مواد التنظيف)" ||
-          product.category === "Autre (أخرى)"
-      )
-      .reduce((sum: number, product: any) => {
-        return sum + product.totalOut * product.unitPrice;
-      }, 0);
+    const totalCategoryoutOfStudentConso =
+      data.productPerformance
+        ?.filter(
+          (product: any) =>
+            categotyToignore.includes(product.category)
+        )
+        .reduce((sum: number, product: any) => {
+          return sum + product.totalOut * product.unitPrice;
+        }, 0) || 0;
 
     // cette const handel the consumation for each student based pare N days/month at the end of month gives the pure total consuma/student
     const consumationPerStudent =
-      totalOutValue && totalCategoryoutOfStudentConso
+      totalOutValue
         ? (totalOutValue - totalCategoryoutOfStudentConso) / numberStudents
         : 0;
 
     // get the weekely data
-    const calculateWeeklyTotals = (dailyMovements:any) => {
-      const weeklyData = [];
+    const calculateWeeklyTotals = (dailyMovements: any) => {
+      const weeklyData: WeeklyDataItem[] = [];
 
       // Helper function to get week number and year
       const getWeekInfo = (dateString: any) => {
         const date = new Date(dateString);
         const startOfYear = new Date(date.getFullYear(), 0, 1);
-        const days = Math.floor((date - startOfYear) / (24 * 60 * 60 * 1000));
+        const days = Math.floor((date.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
         const weekNumber = Math.ceil((days + startOfYear.getDay() + 1) / 7);
         return {
           year: date.getFullYear(),
@@ -111,7 +180,7 @@ const PDFReportLayout = React.forwardRef(
       };
 
       // Group daily movements by week
-      const weeklyGroups = {};
+      const weeklyGroups: WeeklyGroups = {};
 
       dailyMovements.forEach((day: any) => {
         const weekInfo = getWeekInfo(day.date);
@@ -121,6 +190,7 @@ const PDFReportLayout = React.forwardRef(
           weeklyGroups[weekKey] = {
             year: weekInfo.year,
             week: weekInfo.week,
+            weekNumber: weekInfo.week, // Add weekNumber
             startDate: weekInfo.startDate.toISOString().split("T")[0],
             endDate: weekInfo.endDate.toISOString().split("T")[0],
             totalIn: 0,
@@ -128,8 +198,8 @@ const PDFReportLayout = React.forwardRef(
             net: 0,
             movementCount: 0,
             days: [],
-            categoryStats: {},
-            productStats: {},
+            categoryStats: {}, // Keep as Record initially
+            productStats: {}, // Keep as Record initially
           };
         }
 
@@ -143,6 +213,7 @@ const PDFReportLayout = React.forwardRef(
           stockIn: day.stockIn,
           stockOut: day.stockOut,
           net: day.net,
+          movements: day.movements, // Add the missing movements property
           movementCount: day.movements.length,
         });
 
@@ -210,15 +281,27 @@ const PDFReportLayout = React.forwardRef(
         .forEach((weekKey) => {
           const weekData = weeklyGroups[weekKey];
 
-          // Convert category stats to array
-          weekData.categoryStats = Object.values(weekData.categoryStats);
+          // Convert Records to arrays and create the final WeeklyDataItem
+          const weeklyDataItem: WeeklyDataItem = {
+            week: weekKey,
+            weekNumber: weekData.week,
+            year: weekData.year,
+            startDate: weekData.startDate,
+            endDate: weekData.endDate,
+            totalIn: weekData.totalIn,
+            totalOut: weekData.totalOut,
+            net: weekData.net,
+            movementCount: weekData.movementCount,
+            days: weekData.days,
+            // Convert category stats to array
+            categoryStats: Object.values(weekData.categoryStats),
+            // Convert product stats to array and sort by total activity
+            productStats: Object.values(weekData.productStats).sort(
+              (a, b) => b.totalIn + b.totalOut - (a.totalIn + a.totalOut)
+            ),
+          };
 
-          // Convert product stats to array and sort by total activity
-          weekData.productStats = Object.values(weekData.productStats).sort(
-            (a, b) => b.totalIn + b.totalOut - (a.totalIn + a.totalOut)
-          );
-
-          weeklyData.push(weekData);
+          weeklyData.push(weeklyDataItem);
         });
 
       return weeklyData;
@@ -236,15 +319,17 @@ const PDFReportLayout = React.forwardRef(
         day: "numeric",
         month: "short",
       });
-      return `Semaine ${weekData.week} (${startDate} - ${endDate})`;
+      return `Semaine ${weekData.weekNumber} (${startDate} - ${endDate})`;
     };
 
-    const weeklyData = calculateWeeklyTotals(data.dailyMovements);
+    const weeklyData = data?.dailyMovements ? calculateWeeklyTotals(data.dailyMovements) : [];
 
-    // Handle monthly summary - check if it's an object or array
-    const monthlySummaryData = Array.isArray(data.monthlySummary)
-      ? data.monthlySummary
-      : [data.monthlySummary]; // Convert object to array for consistent rendering
+    // Handle monthly summary - ensure we don't include null/undefined entries
+    const monthlySummaryData = (
+      Array.isArray(data.monthlySummary)
+        ? data.monthlySummary
+        : [data.monthlySummary]
+    ).filter(Boolean); // remove null/undefined so accessing properties like `month` is safe
 
     return (
       <div
@@ -274,7 +359,13 @@ const PDFReportLayout = React.forwardRef(
         </div>
 
         {/* Metrics*/}
-        <div className={`${isChecked ? "grid grid-cols-4 gap-4 mb-8" : "grid grid-cols-3 gap-4 mb-8"}`}>
+        <div
+          className={`${
+            checkedOption
+              ? "grid grid-cols-4 gap-4 mb-8"
+              : "grid grid-cols-3 gap-4 mb-8"
+          }`}
+        >
           <div className="bg-green-50 p-4 rounded-xl border border-green-200">
             <div className="text-2xl font-bold text-green-700">
               {data.monthlySummary?.totalIn?.toLocaleString("fr-FR") || "0"}
@@ -295,15 +386,15 @@ const PDFReportLayout = React.forwardRef(
             </div>
             <p className="text-sm font-semibold text-blue-800">Solde Net</p>
           </div>
-          {isChecked &&(
+          {checkedOption && (
             <div className="bg-purple-50 p-4 rounded-xl border border-purple-200">
-            <div className="text-2xl font-bold text-purple-700">
-              {totalOutValue}dh
+              <div className="text-2xl font-bold text-purple-700">
+                {totalOutValue}dh
+              </div>
+              <p className="text-sm font-semibold text-purple-800">
+                Valeur Stock
+              </p>
             </div>
-            <p className="text-sm font-semibold text-purple-800">
-              Valeur Stock
-            </p>
-          </div>
           )}
         </div>
 
@@ -336,49 +427,58 @@ const PDFReportLayout = React.forwardRef(
               </tr>
             </thead>
             <tbody>
-              {monthlySummaryData.map((monthData: any, index: number) => (
-                <tr key={index} className="border-b">
-                  <td className="px-4 py-3">
-                    <div className="text-sm font-medium">
-                      {monthNames[monthData.month - 1]} {monthData.year}
-                    </div>
-                    {!Array.isArray(data.monthlySummary) && (
-                      <div className="text-xs text-gray-500">
-                        Données actuelles
+              {monthlySummaryData.map((monthData: any, index: number) => {
+                const safeMonth = monthData?.month || selectedMonth;
+                const safeYear = monthData?.year || selectedYear;
+                const safeTotalIn = monthData?.totalIn ?? 0;
+                const safeTotalOut = monthData?.totalOut ?? 0;
+                const safeNet = monthData?.net ?? 0;
+                const safeMovementCount = monthData?.movementCount ?? 0;
+
+                return (
+                  <tr key={index} className="border-b">
+                    <td className="px-4 py-3">
+                      <div className="text-sm font-medium">
+                        {monthNames[safeMonth - 1]} {safeYear}
                       </div>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-center font-bold">
-                    <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
-                      +{monthData.totalIn?.toLocaleString("fr-FR") || 0}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-center font-bold">
-                    <span className="px-2 py-1 rounded-full text-xs bg-red-100 text-red-800">
-                      -{monthData.totalOut?.toLocaleString("fr-FR") || 0}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-center font-bold">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs ${
-                        monthData.net > 0
-                          ? "bg-green-100 text-green-800"
-                          : monthData.net < 0
-                          ? "bg-red-100 text-red-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}
-                    >
-                      {monthData.net > 0 ? "+" : ""}
-                      {monthData.net?.toLocaleString("fr-FR") || 0}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-center font-bold">
-                    <span className="font-semibold text-xs">
-                      {monthData.movementCount || 0}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+                      {!Array.isArray(data.monthlySummary) && (
+                        <div className="text-xs text-gray-500">
+                          Données actuelles
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-center font-bold">
+                      <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                        +{safeTotalIn.toLocaleString("fr-FR")}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-center font-bold">
+                      <span className="px-2 py-1 rounded-full text-xs bg-red-100 text-red-800">
+                        -{safeTotalOut.toLocaleString("fr-FR")}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-center font-bold">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs ${
+                          safeNet > 0
+                            ? "bg-green-100 text-green-800"
+                            : safeNet < 0
+                            ? "bg-red-100 text-red-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        {safeNet > 0 ? "+" : ""}
+                        {safeNet.toLocaleString("fr-FR")}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-center font-bold">
+                      <span className="font-semibold text-xs">
+                        {safeMovementCount}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -478,41 +578,58 @@ const PDFReportLayout = React.forwardRef(
           <table className="w-full">
             <thead>
               <tr className="bg-gray-100 border-b">
-                <th className="px-4 py-3 text-left font-medium text-balck">Désignation</th>
-                <th className="px-4 py-3 text-center font-bold  text-black">Valeur</th>
+                <th className="px-4 py-3 text-left font-medium text-balck">
+                  Désignation
+                </th>
+                <th className="px-4 py-3 text-center font-bold  text-black">
+                  Valeur
+                </th>
               </tr>
             </thead>
             <tbody>
-              <tr className="bg-gray-50 border-b">
-                <td className="px-4 py-3">
-                  <span className="font-normal">
-                    Consommation totale incluant les postes hors alimentation
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-center font-bol"> <span className="bg-amber-200">{totalOutValue} Dh</span></td>
-              </tr>
+              {checkedOption && (
+                <tr className="bg-gray-50 border-b">
+                  <td className="px-4 py-3">
+                    <span className="font-normal">
+                      Consommation totale incluant les postes hors alimentation
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center font-bol">
+                    {" "}
+                    <span className="bg-amber-200">{totalOutValue} Dh</span>
+                  </td>
+                </tr>
+              )}
 
-              <tr className="bg-gray-50 border-b">
-                <td className="px-4 py-3">
-                  <span className="font-normal">
-                    Montant des consommations hors catégories alimentaires
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-center font-bold">
-                  <span className="bg-amber-200">{totalCategoryoutOfStudentConso} Dh</span>
-                </td>
-              </tr>
+              {checkedOption && (
+                <tr className="bg-gray-50 border-b">
+                  <td className="px-4 py-3">
+                    <span className="font-normal">
+                      Montant des consommations hors catégories alimentaires
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center font-bold">
+                    <span className="bg-amber-200">
+                      {totalCategoryoutOfStudentConso} Dh
+                    </span>
+                  </td>
+                </tr>
+              )}
 
-              <tr className="bg-gray-50 border-b">
-                <td className="px-4 py-3">
-                  <span className="font-normal">
-                    Montant des consommations strictement alimentaires
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-center font-bold">
-                  <span className="bg-amber-200">{totalOutValue - totalCategoryoutOfStudentConso} Dh</span>
-                </td>
-              </tr>
+              {checkedOption && (
+                <tr className="bg-gray-50 border-b">
+                  <td className="px-4 py-3">
+                    <span className="font-normal">
+                      Montant des consommations strictement alimentaires
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center font-bold">
+                    <span className="bg-amber-200">
+                      {totalOutValue - totalCategoryoutOfStudentConso} Dh
+                    </span>
+                  </td>
+                </tr>
+              )}
 
               <tr className="bg-gray-50 border-b">
                 <td className="px-4 py-3">
@@ -521,7 +638,9 @@ const PDFReportLayout = React.forwardRef(
                   </span>
                 </td>
                 <td className="px-4 py-3 text-center font-bold">
-                   <span className="bg-amber-200">{consumationPerStudent.toFixed(3)} Dh</span>
+                  <span className="bg-amber-200">
+                    {consumationPerStudent.toFixed(2)} Dh
+                  </span>
                 </td>
               </tr>
             </tbody>
@@ -529,7 +648,8 @@ const PDFReportLayout = React.forwardRef(
         </div>
 
         {/* Category Performance*/}
-        <div className="bg-white rounded-xl border border-gray-200 mb-8">
+        {checkedOption && (
+          <div className="bg-white rounded-xl border border-gray-200 mb-8">
           <div className="bg-gray-50 px-6 py-4 border-b">
             <h3 className="text-lg font-bold text-gray-800">
               Performance par Catégorie
@@ -550,9 +670,7 @@ const PDFReportLayout = React.forwardRef(
                 <th className="px-4 py-3 text-center font-bold text-xs">
                   Sorties
                 </th>
-                <th className="px-4 py-3 text-center font-bold text-xs">
-                  Net
-                </th>
+                <th className="px-4 py-3 text-center font-bold text-xs">Net</th>
                 <th className="px-4 py-3 text-center font-bold text-xs ">
                   Mouvements
                 </th>
@@ -606,6 +724,7 @@ const PDFReportLayout = React.forwardRef(
             </tbody>
           </table>
         </div>
+        )}
 
         {/* Product Performance */}
         <div className="bg-white rounded-xl border border-gray-200 mb-8">
@@ -632,9 +751,11 @@ const PDFReportLayout = React.forwardRef(
                 <th className="px-4 py-3 text-center font-bold text-xs">
                   Stock Actuel
                 </th>
-                <th className="px-4 py-3 text-center font-bold text-xs ">
-                  Prix Unitaire
-                </th>
+                {checkedOption && (
+                  <th className="px-4 py-3 text-center font-bold text-xs ">
+                    Prix Unitaire
+                  </th>
+                )}
                 <th className="px-4 py-3 text-center font-bold text-xs">
                   Mouvements
                 </th>
@@ -642,7 +763,7 @@ const PDFReportLayout = React.forwardRef(
             </thead>
             <tbody>
               {data.productPerformance
-                ?.slice(0, 10)
+                ?.slice(0)
                 .map((product: any, index: number) => (
                   <tr key={index} className="border-b">
                     <td className="px-4 py-3">
@@ -683,11 +804,13 @@ const PDFReportLayout = React.forwardRef(
                         {product.unite}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-center font-bold">
-                      <span className="font-semibold text-xs">
-                        {product.unitPrice} dh
-                      </span>
-                    </td>
+                    {checkedOption && (
+                      <td className="px-4 py-3 text-center font-bold">
+                        <span className="font-semibold text-xs">
+                          {product.unitPrice} dh
+                        </span>
+                      </td>
+                    )}
                     <td className="px-4 py-3 text-center font-bold">
                       <span className="font-semibold text-xs">
                         {product.movementCount}
@@ -711,4 +834,4 @@ const PDFReportLayout = React.forwardRef(
   }
 );
 
-export default PDFReportLayout;
+export default GlobalReport;

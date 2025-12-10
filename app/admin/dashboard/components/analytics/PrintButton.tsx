@@ -11,6 +11,7 @@ const PDFDownloadButton = ({
   numberStudents,
   isChecked,
   enableButton,
+  categotyToignore
 }: any) => {
   const [loading, setLoading] = useState(false);
   const printRef = useRef(null);
@@ -65,7 +66,8 @@ const PDFDownloadButton = ({
           selectedMonth={selectedMonth}
           monthNames={monthNames}
           numberStudents={numberStudents}
-          isChecked={isChecked}
+          checkedOption={isChecked}
+          categotyToignore={categotyToignore}
         />
       </div>
 

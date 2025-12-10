@@ -1,4 +1,4 @@
-import { Product } from "@/type";
+import { Product } from "@/types/type";
 import React, { useEffect, useState } from "react";
 import TrackingInvoiceItems from "./TrackingInvoiceItems";
 import {

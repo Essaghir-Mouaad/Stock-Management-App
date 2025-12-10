@@ -21,12 +21,14 @@ import {
   Package2Icon,
   ChartBar,
   ListRestart,
+  Backpack,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { Product } from "@/type";
+import { Product } from "@/types/type";
 import { useReactToPrint } from "react-to-print";
 import "intro.js/introjs.css";
+import BackupManager from "@/app/components/BackupManager";
 
 const WorkerStockWorkspace = () => {
   const [selectedInvoice, setSelectedInvoice] = useState(null);
@@ -36,12 +38,205 @@ const WorkerStockWorkspace = () => {
   const [stockMovements, setStockMovements] = useState({});
   const [reasons, setReasons] = useState({});
   const router = useRouter();
+  const [current] = useState(new Date());
+  const [selectedMonth, setSelectedMonth] = useState(current.getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(current.getFullYear());
   const [invoices, setInvoices] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [productConfirmations, setProductConfirmations] = useState({});
   const [customReasons, setCustomReasons] = useState<{ [key: string]: string }>(
     {}
   );
+
+  const [error, setError] = useState(null);
+  const [analyticsData, setAnalyticsData] = useState({
+    dailyMovements: [],
+    monthlySummary: null,
+    categoryStats: [],
+    productPerformance: [],
+    currentOverview: null,
+  });
+
+  // this function help us to get days
+
+  const getDaysInMonth = (year: number, month: number) => {
+    return new Date(year, month, 0).getDate();
+  };
+
+  // Generate demo data for development/testing
+  const generateDemoData = () => {
+    const data = [];
+    const daysInMonth = getDaysInMonth(selectedYear, selectedMonth);
+
+    for (let i = 1; i <= daysInMonth; i++) {
+      data.push({
+        date: `${selectedYear}-${selectedMonth.toString().padStart(2, "0")}-${i
+          .toString()
+          .padStart(2, "0")}`,
+        stockIn: Math.floor(Math.random() * 50) + 10,
+        stockOut: Math.floor(Math.random() * 40) + 5,
+      });
+    }
+    return data;
+  };
+
+  //thise are just for a default vlaues for the Analyssi data of not exist
+  const generateDemoCategoryData = () => [
+    {
+      name: "Électronique",
+      movementCount: 145,
+      percentage: 35.2,
+      color: "#3B82F6",
+    },
+    {
+      name: "Vêtements",
+      movementCount: 89,
+      percentage: 21.6,
+      color: "#EF4444",
+    },
+    {
+      name: "Alimentation",
+      movementCount: 76,
+      percentage: 18.4,
+      color: "#10B981",
+    },
+    { name: "Maison", movementCount: 52, percentage: 12.6, color: "#F59E0B" },
+    { name: "Sports", movementCount: 50, percentage: 12.2, color: "#8B5CF6" },
+  ];
+
+  const generateDemoProductData = () => [
+    { name: "iPhone 13", movementCount: 25, totalIn: 45.5, totalOut: 32.1 },
+    {
+      name: "Samsung Galaxy",
+      movementCount: 22,
+      totalIn: 38.2,
+      totalOut: 28.7,
+    },
+    { name: "MacBook Pro", movementCount: 18, totalIn: 28.9, totalOut: 15.4 },
+    { name: "AirPods", movementCount: 15, totalIn: 55.3, totalOut: 41.8 },
+    { name: "iPad", movementCount: 12, totalIn: 22.1, totalOut: 18.9 },
+  ];
+
+  const safeFetch = async (url: any, fallback = null) => {
+    try {
+      console.log(`Fetching: ${url}`);
+      const response = await fetch(url, { credentials: "include" });
+
+      if (!response.ok) {
+        console.warn(
+          `API endpoint ${url} returned ${response.status}: ${response.statusText}`
+        );
+        return fallback;
+      }
+
+      const data = await response.json();
+      return data.error ? fallback : data;
+    } catch (error) {
+      console.error(`Failed to fetch ${url}:`, error);
+      return fallback;
+    }
+  };
+
+  const fetchAnalyticsData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const startDate = new Date(selectedYear, selectedMonth - 1, 1);
+      const endDate = new Date(selectedYear, selectedMonth, 0, 23, 59, 59);
+
+      const startDateStr = startDate.toISOString();
+      const endDateStr = endDate.toISOString();
+
+      console.log(
+        `Fetching analytics data for ${startDateStr} to ${endDateStr}`
+      );
+
+      // Fetch all analytics data in parallel with fallbacks
+      const [
+        dailyMovements,
+        monthlySummary,
+        categoryStats,
+        productPerformance,
+        currentOverview,
+      ] = await Promise.all([
+        safeFetch(
+          `/api/analytics/daily-movements?startDate=${startDateStr}&endDate=${endDateStr}`,
+          null
+        ),
+        safeFetch(
+          `/api/analytics/monthly-summary?year=${selectedYear}&month=${selectedMonth}`,
+          null
+        ),
+        safeFetch(
+          `/api/analytics/category-stats?startDate=${startDateStr}&endDate=${endDateStr}`,
+          null
+        ),
+        safeFetch(
+          `/api/analytics/product-performance?startDate=${startDateStr}&endDate=${endDateStr}&limit=10`,
+          null
+        ),
+        safeFetch(
+          `/api/analytics/current-overview?startDate=${startDateStr}&endDate=${endDateStr}`,
+          null
+        ),
+      ]);
+
+      console.log("Fetched data:", {
+        dailyMovements: dailyMovements?.length || 0,
+        monthlySummary: !!monthlySummary,
+        categoryStats: categoryStats?.length || 0,
+        productPerformance: productPerformance?.length || 0,
+        currentOverview: !!currentOverview,
+      });
+
+      setAnalyticsData({
+        dailyMovements: Array.isArray(dailyMovements) ? dailyMovements : [],
+        monthlySummary,
+        categoryStats: Array.isArray(categoryStats) ? categoryStats : [],
+        productPerformance: Array.isArray(productPerformance)
+          ? productPerformance
+          : [],
+        currentOverview,
+      });
+
+      // Show warning if no data was loaded
+      if (
+        !dailyMovements?.length &&
+        !categoryStats?.length &&
+        !productPerformance?.length
+      ) {
+        toast.error(
+          "No analytics data available. Please check if your API endpoints are running."
+        );
+      }
+    } catch (error) {
+      console.error("Error fetching analytics data:", error);
+      setError(error.message);
+      toast.error("Failed to load analytics data. Using demo data instead.");
+
+      // Set demo data as fallback
+      setAnalyticsData({
+        dailyMovements: generateDemoData(),
+        monthlySummary: null,
+        categoryStats: generateDemoCategoryData(),
+        productPerformance: generateDemoProductData(),
+        currentOverview: {
+          totalProducts: 156,
+          totalStockValue: 45678.9,
+          lowStockProducts: 12,
+          highStockProducts: 89,
+        },
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAnalyticsData();
+  }, [selectedYear, selectedMonth]);
+
   const [quantityAndReason, setQuantityAndReason] = useState<{
     [key: string]: {
       product: string;
@@ -78,9 +273,14 @@ const WorkerStockWorkspace = () => {
   const getUserInfo = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/worker/user", {
+      const url =
+        typeof window !== "undefined"
+          ? new URL("/api/worker/user", window.location.origin).toString()
+          : "/api/worker/user";
+      const res = await fetch(url, {
         method: "GET",
         credentials: "include",
+        headers: { Accept: "application/json" },
       });
 
       if (res.ok) {
@@ -90,7 +290,8 @@ const WorkerStockWorkspace = () => {
             userInfo.name.split(" ")[0].slice(1)
         );
       } else {
-        console.error("error fetching user info");
+        const text = await res.text().catch(() => null);
+        console.error("error fetching user info", res.status, text);
       }
     } catch (error) {
       console.error("can't fetch info of user:", error);
@@ -102,19 +303,27 @@ const WorkerStockWorkspace = () => {
   const fetchInvoice = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/worker`, {
+      const url =
+        typeof window !== "undefined"
+          ? new URL("/api/worker", window.location.origin).toString()
+          : "/api/worker";
+      const res = await fetch(url, {
         method: "GET",
         credentials: "include",
+        headers: { Accept: "application/json" },
       });
 
       if (res.ok) {
         const invoice = await res.json();
         setInvoices(invoice || []);
       } else {
-        console.error("Failed to fetch invoice data");
+        const text = await res.text().catch(() => null);
+        console.error("Failed to fetch invoice data", res.status, text);
+        setInvoices([]);
       }
     } catch (error) {
       console.error("Error fetching invoice:", error);
+      setInvoices([]);
     } finally {
       setLoading(false);
     }
@@ -421,6 +630,11 @@ const WorkerStockWorkspace = () => {
             "5️⃣ بعد ذلك يمكنه طباعة التقرير.\n\n" +
             "⚠️ ملاحظة مهمة: إذا قام العامل بحفظ البيانات قبل الطباعة، فإن التقرير سيكون فارغًا. لذلك يجب طباعة التقرير أولاً ثم حفظ البيانات.",
         },
+        {
+          element: "#backup",
+          intro:
+            "هذا القسم مخصص للنسخ الاحتياطي، وهو ضروري لحماية بياناتك. في حال توقف الجهاز أو تعطل، تبقى بياناتك آمنة على مفتاح USB. لاستخدامه، اختر القرص ثم اضغط على زر اختبار القرص، وبعدها في نهاية اليوم يمكنك إرسال البيانات إلى USB. لمزيد من التفاصيل، راجع ملف README.",
+        },
       ],
       showProgress: true,
       showButtons: true,
@@ -439,6 +653,7 @@ const WorkerStockWorkspace = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Header */}
+
       <header className="sticky bg-gradient-to-r from-indigo-900 via-purple-900 to-pink-900 overflow-hidden shadow-2xl">
         <div className="max-w-full mx-auto px-6 py-4">
           <div className="flex items-center justify-between space-y-4">
@@ -909,6 +1124,7 @@ const WorkerStockWorkspace = () => {
                                   className="w-full p-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all duration-300"
                                   placeholder="0"
                                   min="0"
+                                  step={0.01}
                                   max={product.currentStock}
                                   value={stockMovements[product.id] || ""}
                                   onChange={(e) =>
@@ -1174,6 +1390,24 @@ const WorkerStockWorkspace = () => {
         </div>
       </div>
 
+      <div className="py-6 px-6 bg-white rounded-2xl shadow-md">
+        <h2 className="text-2xl md:text-3xl flex items-center text-gray-800 font-semibold tracking-wide mb-6 border-b border-gray-200 pb-3">
+          <Backpack className="w-6 h-6 mr-3 text-indigo-600" />
+          <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            La gestion du backup USB
+          </span>
+          <p className="text-sm text-gray-300">
+            pour plus d'info sur comment ustilise cette section consulter "stock-management-app/Guide(eng) for enlish verion of Guide(arb) for arabic guide"
+          </p>
+        </h2>
+
+        <BackupManager
+          analyticsData={analyticsData}
+          selectedYear={selectedYear}
+          selectedMonth={selectedMonth}
+        />
+      </div>
+
       <div
         ref={printRef}
         className="hidden print:block print:p-8 print:bg-white"
@@ -1318,6 +1552,7 @@ const WorkerStockWorkspace = () => {
           </div>
         </div>
       </div>
+      
     </div>
   );
 };

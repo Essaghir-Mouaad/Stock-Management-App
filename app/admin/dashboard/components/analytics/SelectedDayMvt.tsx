@@ -31,7 +31,7 @@ const SelectedDayMvt = React.forwardRef(
           0
         ) || 0;
 
-    
+
 
     return (
       <div
@@ -65,11 +65,10 @@ const SelectedDayMvt = React.forwardRef(
 
         {/* Metrics */}
         <div
-          className={`${
-            isChecked
-              ? "grid grid-cols-4 gap-4 mb-8"
-              : "grid grid-cols-3 gap-4 mb-8"
-          }`}
+          className={`${isChecked
+              ? "grid grid-cols-3 gap-4 mb-8"
+              : "grid grid-cols-2 gap-4 mb-8"
+            }`}
         >
           <div className="bg-green-50 p-4 rounded-xl border border-green-200">
             <div className="text-2xl font-bold text-green-700">
@@ -85,12 +84,12 @@ const SelectedDayMvt = React.forwardRef(
             </div>
             <p className="text-sm font-semibold text-red-800">Total Sorties</p>
           </div>
-          <div className="bg-blue-50 p-4 rounded-xl border border-blue-200">
+          {/* {<div className="bg-blue-50 p-4 rounded-xl border border-blue-200">
             <div className="text-2xl font-bold text-blue-700">
               {dayMovements?.net || 0}
             </div>
             <p className="text-sm font-semibold text-blue-800">Solde Net</p>
-          </div>
+          </div>} */}
           {isChecked && (
             <div className="bg-purple-50 p-4 rounded-xl border border-purple-200">
               <div className="text-2xl font-bold text-purple-700">
@@ -159,11 +158,10 @@ const SelectedDayMvt = React.forwardRef(
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span
-                        className={`px-2 py-1 rounded-full text-xs ${
-                          movement.movementType === "IN"
+                        className={`px-2 py-1 rounded-full text-xs ${movement.movementType === "IN"
                             ? "bg-green-100 text-green-800"
                             : "bg-red-100 text-red-800"
-                        }`}
+                          }`}
                       >
                         {movement.movementType === "IN" ? "ENTRÉE" : "SORTIE"}
                       </span>

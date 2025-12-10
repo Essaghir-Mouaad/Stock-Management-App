@@ -1,4 +1,4 @@
-import { Product } from "@/type";
+import { Product } from "@/types/type";
 import { LogOut, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import React from "react";

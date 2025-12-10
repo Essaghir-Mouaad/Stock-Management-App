@@ -1,4 +1,4 @@
-import { Product } from "@/type";
+import { Product } from "@/types/type";
 import React, { useEffect, useState } from "react";
 import CurrentInvoiCompo from "./Invoices";
 import {
@@ -65,6 +65,10 @@ const getProductImage = (category: string) => {
       return "🪔"; // Gas lamp (closest match)
     case "Huiles et sauces (الزيوت والصلصات)":
       return "🫙"; // Jar (oil/sauce)
+    case "Légumineuses (البقوليات)":
+      return "🫘"; // Beans
+    case "Fournitures et emballages (مستلزمات وتغليف)":
+      return "📦"; // Package/Supplies
     case "Autre (أخرى)":
       return "📦"; // Other
     case "Tous (الكل)":

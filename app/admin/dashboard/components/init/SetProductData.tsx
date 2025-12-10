@@ -1,4 +1,4 @@
-import { Product } from '@/type';
+import { Product } from '@/types/type';
 import { FileText, Layers, LoaderPinwheelIcon, Plus, Sparkles } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import InvoiceProductsCompo from './productInvoiceCompo';
@@ -85,6 +85,14 @@ const SetProductData = () => {
     const name = e.target.value;
     setInvoiceName(name);
     setIsNameValid(name.length <= 25);
+  };
+
+  const handleInvoiceNameUpdate = (id: string, newName: string) => {
+    setInvoice(prev => 
+      prev.map(inv => 
+        inv.id === id ? { ...inv, name: newName } : inv
+      )
+    );
   };
 
   return (
@@ -210,7 +218,12 @@ const SetProductData = () => {
           </div>
           
           {invoice.map((line, index) => (
-            <InvoiceProductsCompo key={index} invoice={line} index={index} />
+            <InvoiceProductsCompo 
+              key={index} 
+              invoice={line} 
+              index={index} 
+              onNameUpdate={handleInvoiceNameUpdate}
+            />
           ))}
         </div>
       )}

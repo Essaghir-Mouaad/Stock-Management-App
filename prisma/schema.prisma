@@ -26,6 +26,8 @@ model UserProduct {
   createdBy      User            @relation(fields: [createdById], references: [id])
   productLines   ProductLine[] // Actual products in this batch
   stockMovements StockMovement[]
+
+  @@index([createdById])
 }
 
 model ProductLine {

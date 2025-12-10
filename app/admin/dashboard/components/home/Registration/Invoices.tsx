@@ -1,4 +1,4 @@
-import { Product } from "@/type";
+import { Product } from "@/types/type";
 import { BarChart3, Calendar, Eye, FileText } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";

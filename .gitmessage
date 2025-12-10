@@ -1,0 +1,28 @@
+# <Type>: <Area> - <Brief description (50 chars max)>
+#
+# <Detailed description - wrap at 72 characters>
+#
+# Type: [optimize|refactor|test|fix|docs]
+# Area: [db|query|api|frontend|auth|analytics|other]
+# Performance Impact: [none|low|medium|high|measured]
+#
+# Performance Metrics (if applicable):
+# Before: [operation] took Xms
+# After:  [operation] takes Xms
+# Improvement: X% faster
+#
+# Breaking Changes: [yes|no]
+# Migration Required: [yes|no]
+# Tests Updated: [yes|no]
+#
+# Affected Files:
+# -
+#
+# Rollback Instructions:
+# 1.
+# 2.
+# 3.
+#
+# Notes:
+#
+# References: #issue-number (if applicable)

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { deleteProductInvoice, getInvoiceProductByEmail, initialiseProductInvoice } from "@/app/actions/productActions";
+import { deleteProductInvoice, getInvoiceProductByEmail, initialiseProductInvoice, updateInvoiceName } from "@/app/actions/productActions";
 import { getCurrentUser } from "@/app/utils/authClient";
 
 export async function GET() {
@@ -92,5 +92,30 @@ export async function DELETE(request: NextRequest) {
       { error: "Internal server error" },
       { status: 500 }
     );
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { id, name } = await request.json();
+
+    if (!id || !name) {
+      return NextResponse.json({ error: "ID and name are required" }, { status: 400 });
+    }
+
+    if (name.trim().length > 20) {
+      return NextResponse.json({ error: "Name must be 20 characters or less" }, { status: 400 });
+    }
+
+    const result = await updateInvoiceName(id, name.trim());
+    return NextResponse.json(result, { status: 200 });
+  } catch (error) {
+    console.error("Update invoice name error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

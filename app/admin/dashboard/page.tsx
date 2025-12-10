@@ -214,10 +214,6 @@ const startGuideForStatistics = async () => {
   intro.setOptions({
     steps: [
       {
-        element: "#backup",
-        intro: "this section i very important for backup handling when ever you came to check your stock the only thing you can do is to press one of the buttons in order to send the data back to your USB drive just for protection of course and mode data security so to do that all what you have to is to select the your drive click the test drive button than you can wait intel the end of the day and push the data into your USB drive or you can activate auto pucjing every hour for more info cnsulte the PDF version ..."
-      },
-      {
         element: "#yearBtn",
         intro: "اختر السنة التي تريد عرض التحليلات الخاصة بها لمتابعة الأداء السنوي للمخزون."
       },

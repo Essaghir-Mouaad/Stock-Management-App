@@ -1,4 +1,4 @@
-import { Product } from '@/type'
+import { Product } from '@/types/type'
 import { SquareArrowDownIcon, SquareArrowUpIcon, AlertTriangle, Package, TrendingDown, Star, Calendar, Hash, Layers, ShoppingCart, DollarSign, TrendingUp } from 'lucide-react';
 import React, { useState } from 'react'
 

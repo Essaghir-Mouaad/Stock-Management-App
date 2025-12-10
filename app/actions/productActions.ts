@@ -1,4 +1,4 @@
-import { Product } from "@/type";
+import { Product } from "@/types/type";
 import prisma from "../lib/prisma";
 // import { generateProductId } from "./utilityActions";
 
@@ -333,3 +333,16 @@ export const updateProductLine = async (productLineId: string, updateData: any) 
     throw error;
   }
 };
+
+export const updateInvoiceName = async (id: string, name: string) => {
+  try {
+    const updateInvoiceName = await prisma.userProduct.update({
+      where: { id },
+      data: { name: name }
+    })
+    return updateInvoiceName
+  } catch (error) {
+    console.error("Error updating invoice name", error)
+    throw error
+  }
+}

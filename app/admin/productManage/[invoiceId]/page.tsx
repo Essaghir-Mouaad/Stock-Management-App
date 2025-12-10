@@ -24,25 +24,25 @@ const ProductPage = ({
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
 
-const categories = [
-  "Tous (الكل)",
-  "Boissons (مشروبات)",
-  "Céréales (الحبوب)",
-  "Fruits (فواكه)",
-  "Légumes (خضروات)",
-  "Viande (لحم)",
-  "Produits laitiers (منتجات الألبان)",
-  "Produits de nettoyage (مواد التنظيف)",
-  "Épices et condiments (التوابل والمنكهات)",
-  "Produits en conserve (المعلبات)",
-  "Snacks et biscuits (وجبات خفيفة وبسكويت)",
-  "Pain et boulangerie (الخبز والمخبوزات)",
-  "Gaz (قنينات الغاز)",
-  "Huiles et sauces (الزيوت والصلصات)",
-  "Autre (أخرى)"
-];
-
-
+  const categories = [
+    "Tous (الكل)",
+    "Fruits (فواكه)",
+    "Légumes (خضروات)",
+    "Viande (لحم)",
+    "Boissons (مشروبات)",
+    "Céréales (الحبوب)",
+    "Produits laitiers (منتجات الألبان)",
+    "Légumineuses (البقوليات)",
+    "Produits de nettoyage (مواد التنظيف)",
+    "Épices et condiments (التوابل والمنكهات)",
+    "Produits en conserve (المعلبات)",
+    "Snacks et biscuits (وجبات خفيفة وبسكويت)",
+    "Pain et boulangerie (الخبز والمخبوزات)",
+    "Gaz (قنينات الغاز)",
+    "Huiles et sauces (الزيوت والصلصات)",
+    "Fournitures et emballages (مستلزمات وتغليف)",
+    "Autre (أخرى)",
+  ];
 
   useEffect(() => {
     const resolvePrams = async () => {
@@ -193,16 +193,16 @@ const getProductImage = (category: string) => {
       return "🪔"; // Gas lamp (closest match)
     case "Huiles et sauces (الزيوت والصلصات)":
       return "🫙"; // Jar (oil/sauce)
+    case "Légumineuses (البقوليات)":
+      return "🫘"; // Beans
+    case "Fournitures et emballages (مستلزمات وتغليف)":
+      return "📦"; // Package/Supplies
     case "Autre (أخرى)":
       return "📦"; // Other
-    case "Tous (الكل)":
-      return "🗂️"; // All
     default:
       return "📦"; // Default
   }
 };
-
-
 
   const filteredProducts = productLines.filter((product) => {
     const matchesSearch = product.name
@@ -377,7 +377,7 @@ const getProductImage = (category: string) => {
                 </label>
                 <input
                   type="number"
-                  step="0.01"
+                  step={0.01}
                   value={formData.unitPrice}
                   onChange={(e) =>
                     setFormData({
@@ -397,6 +397,7 @@ const getProductImage = (category: string) => {
                   type="number"
                   required
                   value={formData.initialStock}
+                  step={0.01}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
@@ -432,6 +433,7 @@ const getProductImage = (category: string) => {
                 <input
                   type="number"
                   required
+                  step={0.01}
                   value={formData.minStock}
                   onChange={(e) =>
                     setFormData({
@@ -493,7 +495,7 @@ const getProductImage = (category: string) => {
     );
   };
 
-  // Edit madel section 
+  // Edit madel section
   const EditProductModal = () => {
     const [formData, setFormData] = useState({
       name: editingProduct?.name || "",
@@ -537,8 +539,7 @@ const getProductImage = (category: string) => {
       }
 
       try {
-        const originalStock =
-          editingProduct.currentStock || editingProduct.initialStock || 0;
+        const originalStock = editingProduct.currentStock;
         let newStock = originalStock;
 
         // Calculate new stock based on adjustment type
@@ -603,9 +604,10 @@ const getProductImage = (category: string) => {
               `Stock movement recorded: ${movementType} ${quantityChanged} units`
             );
             toast.success(
-              `Produit mis à jour avec succès. Stock ${adjustmentType === "add"
-                ? "ajouté"
-                : adjustmentType === "subtract"
+              `Produit mis à jour avec succès. Stock ${
+                adjustmentType === "add"
+                  ? "ajouté"
+                  : adjustmentType === "subtract"
                   ? "consommé"
                   : "ajusté"
               }: ${quantityChanged} ${editingProduct.unite}`
@@ -682,7 +684,7 @@ const getProductImage = (category: string) => {
                 </label>
                 <input
                   type="number"
-                  step="0.01"
+                  step={0.01}
                   value={formData.unitPrice}
                   onChange={(e) =>
                     setFormData({
@@ -707,9 +709,7 @@ const getProductImage = (category: string) => {
                         Stock Courant
                       </label>
                       <div className="px-4 py-2 bg-white border border-gray-300 rounded-lg">
-                        {editingProduct?.currentStock ||
-                          editingProduct?.initialStock ||
-                          0}{" "}
+                        {editingProduct?.currentStock || 0}{" "}
                         {editingProduct?.unite}
                       </div>
                     </div>
@@ -740,6 +740,7 @@ const getProductImage = (category: string) => {
                       <input
                         type="number"
                         value={stockAdjustment}
+                        step={0.01}
                         onChange={(e) =>
                           setStockAdjustment(parseFloat(e.target.value) || 0)
                         }
@@ -759,16 +760,19 @@ const getProductImage = (category: string) => {
                       <p className="text-sm text-blue-800">
                         <strong>Preview:</strong>
                         {adjustmentType === "add" &&
-                          ` ${editingProduct?.currentStock || 0
-                          } + ${stockAdjustment} = ${(editingProduct?.currentStock || 0) +
-                          stockAdjustment
+                          ` ${
+                            editingProduct?.currentStock || 0
+                          } + ${stockAdjustment} = ${
+                            (editingProduct?.currentStock || 0) +
+                            stockAdjustment
                           } ${editingProduct?.unite}`}
                         {adjustmentType === "subtract" &&
-                          ` ${editingProduct?.currentStock || 0
+                          ` ${
+                            editingProduct?.currentStock || 0
                           } - ${stockAdjustment} = ${Math.max(
                             0,
                             (editingProduct?.currentStock || 0) -
-                            stockAdjustment
+                              stockAdjustment
                           )} ${editingProduct?.unite}`}
                         {adjustmentType === "set" &&
                           ` Stock will be set to ${stockAdjustment} ${editingProduct?.unite}`}
@@ -784,6 +788,7 @@ const getProductImage = (category: string) => {
                 </label>
                 <input
                   type="number"
+                  step={0.01}
                   required
                   value={formData.initialStock}
                   onChange={(e) =>
